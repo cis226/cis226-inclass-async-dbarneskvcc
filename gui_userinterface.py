@@ -49,6 +49,10 @@ class SyncAsyncAwaitDemoWindow:
                 self._on_submit_sync(event, values)
             elif event == "-submit-async-":
                 self._on_submit_async(event, values)
+            elif event == "-submit-thread-":
+                self._on_submit_thread(event, values)
+            elif event == "-submit-long-run-":
+                self._on_submit_long_run(event, values)
 
     # Methods to run when button is clicked
     def _on_submit_sync(self, event, values):
@@ -62,6 +66,20 @@ class SyncAsyncAwaitDemoWindow:
         self.window["-output-"].update("Fetching Name")
         name = asyncio.run(self._get_name_async())
         self.window["-output-"].update(name)
+
+    def _on_submit_thread(self, event, values):
+        """Do work for submitting using threads"""
+        self.window["-output-"].update("Fetching Name")
+        task = threading.Thread(
+            target=self._get_name_thread,
+            args=("-done-long-run-",),
+        )
+        task.start()
+
+    def _on_submit_long_run(self, event, values):
+        """Do work for submitting with long running"""
+        self.window["-output-"].update("Fetching Name Long Running")
+        self.window.perform_long_operation(self._get_name, "-done-long-run-")
 
     # The simulated "long-running-tasks" that our buttons will trigger.
     def _get_name(self):
@@ -77,3 +95,10 @@ class SyncAsyncAwaitDemoWindow:
             await asyncio.sleep(0.5)
             self.window["-progress-"].update((i * 5) + 5)
         return "David Barnes"
+
+    def _get_name_thread(self, end_key):
+        """Get name from long running task using a thread"""
+        for i in range(0, 20):
+            time.sleep(0.5)
+            self.window["-progress-"].update((i * 5) + 5)
+        self.window["-output-"].update("David Barnes")
